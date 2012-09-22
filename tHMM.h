@@ -40,8 +40,8 @@ public:
 	~tHMMU();
 	void setup(vector<unsigned char> &genome, int start);
 	void setupQuick(vector<unsigned char> &genome, int start);
-	void update(unsigned char *states,unsigned char *newStates,unsigned char *nodeMap);
-	void show(unsigned char *nodeMap);
+	void update(unsigned char *states,unsigned char *newStates);
+	void show();
 	
 };
 

@@ -40,7 +40,7 @@ string tGame::executeGame(tAgent* gameAgent, FILE *data_file, bool report)
     
     /*       BEGINNING OF SIMULATION LOOP       */
     
-    for (int rep = 0; rep < 4; ++rep)
+    for (int rep = 0; rep < 5; ++rep)
     {
         int s1[strLength], s2[strLength], out[strLength];
         
@@ -65,7 +65,7 @@ string tGame::executeGame(tAgent* gameAgent, FILE *data_file, bool report)
         }
     }
     
-    agentFitness /= 4.0;
+    agentFitness /= 5.0;
     
     /*       END OF SIMULATION LOOP       */
     

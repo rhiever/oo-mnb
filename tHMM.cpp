@@ -126,14 +126,14 @@ void tHMMU::setupQuick(vector<unsigned char> &genome, int start)
 	}
 }
 
-void tHMMU::update(unsigned char *states, unsigned char *newStates,unsigned char *nodeMap)
+void tHMMU::update(unsigned char *states, unsigned char *newStates)
 {
 	int I=0;
 	int i,j,r;
     
 	for(vector<int>::iterator it = ins.begin(), end = ins.end(); it != end; ++it)
     {
-		I=(I<<1)+((states[nodeMap[*it]])&1);
+		I=(I<<1)+((states[*it])&1);
     }
     
 	r=1+(rand()%(sums[I]-1));
@@ -147,19 +147,20 @@ void tHMMU::update(unsigned char *states, unsigned char *newStates,unsigned char
     
 	for(i = 0; i < outs.size(); ++i)
     {
-		newStates[nodeMap[outs[i]]] |= (j >> i) & 1;
+		newStates[outs[i]] |= (j >> i) & 1;
     }
 }
 
-void tHMMU::show(unsigned char *nodeMap){
+void tHMMU::show()
+{
 	int i,j;
 	cout<<"INS: ";
 	for(i=0;i<ins.size();i++)
-		cout<<(int)nodeMap[ins[i]]<<" ";
+		cout<<(int)ins[i]<<" ";
 	cout<<endl;
 	cout<<"OUTS: ";
 	for(i=0;i<outs.size();i++)
-		cout<<(int)nodeMap[outs[i]]<<" ";
+		cout<<(int)outs[i]<<" ";
 	cout<<endl;
 	for(i=0;i<hmm.size();i++){
 		for(j=0;j<hmm[i].size();j++)

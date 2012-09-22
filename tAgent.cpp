@@ -73,17 +73,15 @@ void tAgent::setupRandomAgent(int nucleotides)
     
 	for(int i = 0; i < nucleotides; ++i)
     {
-        bool createdHMGStartCodon = false, createdSMMStartCodon = false;
+        bool createdHMGStartCodon = false;
         
         do
         {
             genome[i] = rand() & 255;
             
             createdHMGStartCodon = (i > 1 && genome[i - 1] == 42 && genome[i] == (255 - 42));
-            
-            createdSMMStartCodon = (i > 1 && genome[i - 1] == 41 && genome[i] == (255 - 41));
-            
-        } while (createdHMGStartCodon || createdSMMStartCodon);
+
+        } while (createdHMGStartCodon);
     }
     
 	ampUpStartCodons();
@@ -91,14 +89,6 @@ void tAgent::setupRandomAgent(int nucleotides)
 #ifdef useANN
 	ANN->setup();
 #endif
-}
-
-void tAgent::setupNodeMap(void)
-{
-    for(int i = 0; i < 256; ++i)
-    {
-        nodeMap[i] = 0;
-    }
 }
 
 void tAgent::loadAgent(char* filename)
@@ -150,18 +140,6 @@ void tAgent::ampUpStartCodons(void)
         j += 270;
 	}
     
-    // add start state map modifiers
-    for (i = 0; i < numInputs + numOutputs; ++i)
-    {
-        genome[j] = 41;
-        genome[j + 1] = 255 - 41;
-        genome[j + 2] = (int)(((double)i / (double)(numInputs + numOutputs + 2)) * maxNodes);
-        genome[j + 3] = (int)(double)maxNodes / (double)(numInputs + numOutputs + 2);
-        genome[j + 4] = i;
-        
-        j += 5;
-    }
-    
     genome.resize(j);
 #else
     // add start gates
@@ -176,27 +154,16 @@ void tAgent::ampUpStartCodons(void)
         }
 	}
     
-    // add start state map modifiers
-    for (i = 0; i < numInputs + numOutputs + 2; ++i)
-    {
-        j=rand()%((int)genome.size()-10);
-        genome[j]=41;
-        genome[j+1]=255-41;
-        genome[j+2]=(int)(((double)i / (double)(numInputs + numOutputs + 2)) * maxNodes);
-        genome[j+3]=(int)(double)maxNodes / (double)(numInputs + numOutputs + 2);
-        genome[j+4]=i;
-    }
 #endif
 }
 
-void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, double deletionRate, int theTime)
+void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, int theTime)
 {
-	int nucleotides=(int)from->genome.size();
-	//double localMutationRate=4.0/from->genome.size();
+	int nucleotides = (int)from->genome.size();
+	double mutationRate = mutationsPerInherit / from->genome.size();
 	vector<unsigned char> buffer;
-	born=theTime;
+	born = theTime;
     numHMGs = from->numHMGs;
-    numSMMs = from->numSMMs;
 	//ancestor=from;
 	//from->nrPointingAtMe++;
 	from->nrOfOffspring++;
@@ -205,33 +172,26 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
     
 #ifdef directedMutations
     
-    // per-site mutation
+    // gate per-site mutation
 	for(int i = 0; i < nucleotides; ++i)
     {
-        // disallow point mutations from deleting HMGs or SMMs
+        // disallow point mutations from deleting HMGs
         bool isHMGStartCodon = (from->genome[i] == 42 && from->genome[i + 1] == (255 - 42)) ||
                                 (i > 1 && genome[i - 1] == 42 && from->genome[i] == (255 - 42));
         
-        bool isSMMStartCodon = (from->genome[i] == 41 && from->genome[i + 1] == (255 - 41)) ||
-                                (i > 1 && from->genome[i - 1] == 41 && from->genome[i] == (255 - 41));
-        
-		if(!isHMGStartCodon && !isSMMStartCodon && randDouble < mutationRate)
+		if(!isHMGStartCodon && randDouble < mutationRate)
         {
             bool createdHMGStartCodon = false;
-            bool createdSMMStartCodon = false;
             
-            // disallow point mutations from creating new HMGs or SMMs
+            // disallow point mutations from creating new HMGs
             do
             {
                 genome[i] = rand() & 255;
                 
                 createdHMGStartCodon = (genome[i] == 42 && from->genome[i + 1] == (255 - 42)) ||
                 (i > 1 && genome[i - 1] == 42 && genome[i] == (255 - 42));
-                
-                createdSMMStartCodon = (genome[i] == 41 && from->genome[i + 1] == (255 - 41)) ||
-                (i > 1 && genome[i - 1] == 41 && genome[i] == (255 - 41));
-                
-            } while (createdHMGStartCodon || createdSMMStartCodon);
+
+            } while (createdHMGStartCodon);
         }
 		else
         {
@@ -239,79 +199,72 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
         }
     }
     
-    // duplication
+    // add gate
     if(randDouble < duplicationRate)
     {
-        int geneToDuplicate = 0;
-        bool duplicateHMG = rand() % 2 == 0;
+        ++numHMGs;
         
-        if (duplicateHMG)
+        // duplicate gate
+        if (rand() % 2 == 0)
         {
-            geneToDuplicate = 1 + (rand() % numHMGs);
-            ++numHMGs;
-        }
-        /*else
-        {
-            geneToDuplicate = 1 + (rand() % numSMMs);
-            ++numSMMs;
-        }*/
-
-        int geneCount = 0;
-        int copyStartIndex = 0, copyEndIndex = 0;
-        
-        for (int i = 0; i < nucleotides; ++i)
-        {
-            bool isHMG = genome[i] == 42 && genome[i + 1] == (255 - 42);
+            int geneToDuplicate = 1 + (rand() % numHMGs);
+            int geneCount = 0;
+            int copyStartIndex = 0, copyEndIndex = 0;
             
-            bool isSMM = genome[i] == 41 && genome[i + 1] == (255 - 41);
-            
-            if ((duplicateHMG && isHMG))// || (!duplicateHMG && isSMM))
+            for (int i = 0; i < nucleotides; ++i)
             {
-                ++geneCount;
+                bool isHMG = genome[i] == 42 && genome[i + 1] == (255 - 42);
                 
-                if (geneCount == geneToDuplicate)
+                if (isHMG)
                 {
-                    copyStartIndex = i;
+                    ++geneCount;
                     
-                    if (isHMG)
+                    if (geneCount == geneToDuplicate)
                     {
-                        copyEndIndex = i + 270;
+                        copyStartIndex = i;
+                        
+                        if (isHMG)
+                        {
+                            copyEndIndex = i + 270;
+                        }
+                        else
+                        {
+                            copyEndIndex = copyStartIndex;
+                        }
+                        
+                        break;
                     }
-                    else if (isSMM)
-                    {
-                        copyEndIndex = i + 5;
-                    }
-                    else
-                    {
-                        copyEndIndex = copyStartIndex;
-                    }
-                    
-                    break;
                 }
+            }
+            
+            buffer.clear();
+            buffer.resize(0);
+            buffer.insert(buffer.begin(), genome.begin() + copyStartIndex, genome.begin() + copyEndIndex);
+        }
+        
+        // random gate
+        else
+        {
+            buffer.clear();
+            buffer.resize(270);
+            
+            buffer[0] = 42;
+            buffer[1] = 255 - 42;
+            
+            for (int i = 2; i < buffer.size(); ++i)
+            {
+                buffer[i] = rand() % 255;
             }
         }
         
-        buffer.clear();
-        buffer.insert(buffer.begin(), genome.begin() + copyStartIndex, genome.begin() + copyEndIndex);
         genome.insert(genome.end(), buffer.begin(), buffer.end());
     }
     
-    // deletion
-    if(randDouble < deletionRate)
+    // gate deletion
+    if(numHMGs > 1 && randDouble < deletionRate)
     {
-        int geneToDelete = 0;
-        bool deleteHMG = rand() % 2 == 0;
-        
-        if (deleteHMG)
-        {
-            geneToDelete = 1 + (rand() % numHMGs);
-            --numHMGs;
-        }
-        else
-        {
-            geneToDelete = 1 + (rand() % numSMMs);
-            --numSMMs;
-        }
+        --numHMGs;
+        int geneToDelete = 1 + (rand() % numHMGs);
         int geneCount = 0;
         int deleteStartIndex = 0, deleteEndIndex = 0;
         
@@ -319,9 +272,7 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
         {
             bool isHMG = genome[i] == 42 && genome[i + 1] == (255 - 42);
             
-            bool isSMM = genome[i] == 41 && genome[i + 1] == (255 - 41);
-            
-            if ((deleteHMG && isHMG))// || (!deleteHMG && isSMM))
+            if (isHMG)
             {
                 ++geneCount;
                 
@@ -332,10 +283,6 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
                     if (isHMG)
                     {
                         deleteEndIndex = i + 270;
-                    }
-                    else if (isSMM)
-                    {
-                        deleteEndIndex = i + 5;
                     }
                     else
                     {
@@ -348,6 +295,11 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
         }
         
         genome.erase(genome.begin() + deleteStartIndex, genome.begin() + deleteEndIndex);
+    }
+    
+    if (genome.size() == 0)
+    {
+        cout << "empty gate " << numHMGs << endl; exit(0);
     }
     
 #else
@@ -395,15 +347,13 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
 
 void tAgent::setupPhenotype(void)
 {
-	int i,j;
 	tHMMU *hmmu;
-    this->setupNodeMap();
+    
     numHMGs = 0;
-    numSMMs = 0;
     
 	if(hmmus.size() != 0)
     {
-		for(i = 0; i < hmmus.size(); ++i)
+		for(int i = 0; i < hmmus.size(); ++i)
         {
 			delete hmmus[i];
         }
@@ -411,7 +361,7 @@ void tAgent::setupPhenotype(void)
     
 	hmmus.clear();
     
-	for(i = 0; i < genome.size() - 1; ++i)
+	for(int i = 0; i < genome.size() - 1; ++i)
     {
         // deterministic gate
 		if((genome[i] == 42) && (genome[i + 1] == (255 - 42)))
@@ -431,22 +381,6 @@ void tAgent::setupPhenotype(void)
 			hmmu->setupQuick(genome,i);
 			hmmus.push_back(hmmu);
 		}*/
-        
-        // state map modifier gene
-        if((genome[i] == 41) && (genome[i + 1] == (255 - 41)))
-        {
-            int baseIndex = genome[(i + 2) % genome.size()];
-            int lengthModifier = genome[(i + 3) % genome.size()];
-            int addVal = genome[(i + 4) % genome.size()];
-            
-            for(j = 0; j < lengthModifier; ++j)
-            {
-                int index = (baseIndex + j) % maxNodes;
-                nodeMap[index] = (nodeMap[index] + addVal) % maxNodes;
-            }
-            
-            ++numSMMs;
-        }
 	}
 }
 
@@ -476,7 +410,7 @@ void tAgent::updateStates(void)
 {
 	for(vector<tHMMU*>::iterator it = hmmus.begin(), end = hmmus.end(); it != end; ++it)
     {
-		(*it)->update(&states[0],&newStates[0],&nodeMap[0]);
+		(*it)->update(&states[0],&newStates[0]);
     }
     
 	for(int i=0;i<maxNodes;i++)
@@ -563,8 +497,10 @@ void tAgent::saveLOD(FILE *statsFile,FILE *genomeFile){
 
 void tAgent::showPhenotype(void)
 {
-	for(int i=0;i<hmmus.size();i++)
-		hmmus[i]->show(&nodeMap[0]);
+	for(int i = 0; i < hmmus.size(); ++i)
+    {
+		hmmus[i]->show();
+    }
 	cout<<"------"<<endl;
 }
 

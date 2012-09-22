@@ -65,11 +65,11 @@ using namespace std;
 //double  replacementRate             = 0.1;
 
 #ifdef directedMutations
-double  perSitePointMutationRate    = 0.005;
-double  duplicationMutationRate     = 0.01;
-double  deletionMutationRate        = 0.005;
+double  mutationsPerInherit         = 4.0;
+double  duplicationMutationRate     = 0.001;
+double  deletionMutationRate        = 0.0008;
 #else
-double  perSitePointMutationRate    = 0.005;
+double  mutationsPerInherit         = 4.0;
 double  duplicationMutationRate     = 0.05;
 double  deletionMutationRate        = 0.02;
 #endif
@@ -137,21 +137,21 @@ int main(int argc, char *argv[])
             }
         }
         
-        // -mr [double]: set per-site point mutation rate (default: 0.005)
+        // -mr [double]: set # mutations per inherit (default: 4)
         else if (strcmp(argv[i], "-mr") == 0 && (i + 1) < argc)
         {
             ++i;
             
-            perSitePointMutationRate = atof(argv[i]);
+            mutationsPerInherit = atof(argv[i]);
             
-            if (perSitePointMutationRate < 0)
+            if (mutationsPerInherit < 0)
             {
-                cerr << "minimum per-site point mutation rate permitted is 0.0." << endl;
+                cerr << "minimum # mutations per inherit permitted is 0.0." << endl;
                 exit(0);
             }
-            else if (perSitePointMutationRate > 1)
+            else if (mutationsPerInherit > 1000)
             {
-                cerr << "maximum per-site point mutation rate permitted is 1.0." << endl;
+                cerr << "maximum # mutations per inherit permitted is 1,000." << endl;
                 exit(0);
             }
         }
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 	for(int i = 0; i < populationSize; ++i)
     {
 		gameAgents[i] = new tAgent;
-		gameAgents[i]->inherit(gameAgent, 0.01, duplicationMutationRate, deletionMutationRate, 0);
+		gameAgents[i]->inherit(gameAgent, mutationsPerInherit, duplicationMutationRate, deletionMutationRate, 0);
     }
     
 	GANextGen.resize(populationSize);
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
         
         if (update % 1000 == 0)
         {
-            cout << "generation " << update << ": game agent [" << gameAgentAvgFitness << " : " << gameAgentMaxFitness << "]" << endl;
+            cout << "generation " << update << ": game agent [" << gameAgentAvgFitness << " : " << gameAgentMaxFitness << "] " << (bestGameAgent->genome.size() / 270) << endl;
         }
         
 		for(int i = 0; i < populationSize; ++i)
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
                 j = rand() % populationSize;
             } while((j == i) || (randDouble > (gameAgents[j]->fitness / gameAgentMaxFitness)));
             
-			offspring->inherit(gameAgents[j], perSitePointMutationRate, duplicationMutationRate, deletionMutationRate, update);
+			offspring->inherit(gameAgents[j], mutationsPerInherit, duplicationMutationRate, deletionMutationRate, update);
 			GANextGen[i] = offspring;
 		}
         

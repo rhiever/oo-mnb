@@ -41,8 +41,7 @@ public:
 	vector<tHMMU*> hmmus;
 	vector<unsigned char> genome;
 	vector<tDot> dots;
-    unsigned char nodeMap[256];
-    int numHMGs, numSMMs;
+    int numHMGs;
 #ifdef useANN
 	tANN *ANN;
 #endif
@@ -67,11 +66,10 @@ public:
 	tAgent();
 	~tAgent();
 	void setupRandomAgent(int nucleotides);
-    virtual void setupNodeMap(void);
 	void loadAgent(char* filename);
 	void loadAgentWithTrailer(char* filename);
 	void setupPhenotype(void);
-	void inherit(tAgent *from,double mutationRate,double duplicationRate,double deletionRate,int theTime);
+	void inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, int theTime);
 	unsigned char * getStatesPointer(void);
 	void updateStates(void);
 	void resetBrain(void);
