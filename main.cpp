@@ -63,9 +63,17 @@ void    doBroadcast(string data);
 using namespace std;
 
 //double  replacementRate             = 0.1;
+
+#ifdef directedMutations
 double  perSitePointMutationRate    = 0.005;
 double  duplicationMutationRate     = 0.01;
 double  deletionMutationRate        = 0.005;
+#else
+double  perSitePointMutationRate    = 0.005;
+double  duplicationMutationRate     = 0.05;
+double  deletionMutationRate        = 0.02;
+#endif
+
 int     populationSize              = 100;
 int     totalGenerations            = 10002;
 tGame   *game                       = NULL;

@@ -250,11 +250,11 @@ void tAgent::inherit(tAgent *from, double mutationRate, double duplicationRate, 
             geneToDuplicate = 1 + (rand() % numHMGs);
             ++numHMGs;
         }
-        else
+        /*else
         {
             geneToDuplicate = 1 + (rand() % numSMMs);
             ++numSMMs;
-        }
+        }*/
 
         int geneCount = 0;
         int copyStartIndex = 0, copyEndIndex = 0;
