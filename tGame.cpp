@@ -40,27 +40,32 @@ string tGame::executeGame(tAgent* gameAgent, FILE *data_file, bool report)
     
     /*       BEGINNING OF SIMULATION LOOP       */
     
-    int s1[strLength], s2[strLength], out[strLength];
-    
-    for (int i = 0; i < strLength; ++i)
+    for (int rep = 0; rep < 4; ++rep)
     {
-        s1[i] = rand() % 2;
-        s2[i] = rand() % 2;
-        out[i] = s1[i] ^ s2[i];
+        int s1[strLength], s2[strLength], out[strLength];
         
-        gameAgent->states[i] = s1[i];
-        gameAgent->states[i + strLength] = s2[i];
-    }
-    
-    gameAgent->updateStates();
-    
-    for (int i = 0; i < numOutputs; ++i)
-    {
-        if ((gameAgent->states[i + numInputs] & 1) == out[i])
+        for (int i = 0; i < strLength; ++i)
         {
-            agentFitness += 1.0;
+            s1[i] = rand() % 2;
+            s2[i] = rand() % 2;
+            out[i] = s1[i] ^ s2[i];
+            
+            gameAgent->states[i] = s1[i];
+            gameAgent->states[i + strLength] = s2[i];
+        }
+        
+        gameAgent->updateStates();
+    
+        for (int i = 0; i < numOutputs; ++i)
+        {
+            if ((gameAgent->states[i + numInputs] & 1) == out[i])
+            {
+                agentFitness += 1.0;
+            }
         }
     }
+    
+    agentFitness /= 4.0;
     
     /*       END OF SIMULATION LOOP       */
     

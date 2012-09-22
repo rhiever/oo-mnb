@@ -64,8 +64,8 @@ using namespace std;
 
 //double  replacementRate             = 0.1;
 double  perSitePointMutationRate    = 0.005;
-double  duplicationMutationRate     = 0.05;
-double  deletionMutationRate        = 0.02;
+double  duplicationMutationRate     = 0.01;
+double  deletionMutationRate        = 0.005;
 int     populationSize              = 100;
 int     totalGenerations            = 10002;
 tGame   *game                       = NULL;
@@ -294,10 +294,10 @@ int main(int argc, char *argv[])
             exit(0);
         }
         
-        /*if (update % 1000 == 0)
+        if (update % 1000 == 0)
         {
             cout << "generation " << update << ": game agent [" << gameAgentAvgFitness << " : " << gameAgentMaxFitness << "]" << endl;
-        }*/
+        }
         
 		for(int i = 0; i < populationSize; ++i)
 		{
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
 	}
 	
     // save the genome file of the lmrca
-	gameAgents[0]->ancestor->ancestor->saveGenome(gameGenomeFileName.c_str());
+	bestGameAgent->saveGenome(gameGenomeFileName.c_str());
     
     // save quantitative stats on the best game agent's LOD
     /*vector<tAgent*> saveLOD;

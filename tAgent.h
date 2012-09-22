@@ -42,6 +42,7 @@ public:
 	vector<unsigned char> genome;
 	vector<tDot> dots;
     unsigned char nodeMap[256];
+    int numHMGs, numSMMs;
 #ifdef useANN
 	tANN *ANN;
 #endif
@@ -70,7 +71,6 @@ public:
 	void loadAgent(char* filename);
 	void loadAgentWithTrailer(char* filename);
 	void setupPhenotype(void);
-    void setupMegaPhenotype(int howMany);
 	void inherit(tAgent *from,double mutationRate,double duplicationRate,double deletionRate,int theTime);
 	unsigned char * getStatesPointer(void);
 	void updateStates(void);
