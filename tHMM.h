@@ -38,8 +38,8 @@ public:
 	unsigned char _xDim,_yDim;
 	tHMMU();
 	~tHMMU();
-	void setup(vector<unsigned char> &genome, int start);
-	void setupQuick(vector<unsigned char> &genome, int start);
+	void setup(vector<unsigned char> &genome, int start, int numStates);
+	void setupQuick(vector<unsigned char> &genome, int start, int numStates);
 	void update(unsigned char *states,unsigned char *newStates);
 	void show();
 	

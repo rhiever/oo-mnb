@@ -25,7 +25,8 @@
 #include <math.h>
 #include "tAgent.h"
 
-tAgent::tAgent(){
+tAgent::tAgent()
+{
 	nrPointingAtMe=1;
 	ancestor = NULL;
 	for(int i=0;i<maxNodes;i++)
@@ -42,6 +43,7 @@ tAgent::tAgent(){
 	retired=false;
 	food=0;
     totalSteps=0;
+    numStates = numInputs + numOutputs + 2;
 #ifdef useANN
 	ANN=new tANN;
 #endif
@@ -136,6 +138,13 @@ void tAgent::ampUpStartCodons(void)
 	{
 		genome[j] = 42;
 		genome[j + 1] = (255 - 42);
+        //j+2 gate type
+        //j+3 # ins
+        //j+4 # outs
+        for (int offset = 5; offset < 13; ++offset)
+        {
+            genome[j + offset] = rand() % numStates;
+        }
         
         j += 270;
 	}
@@ -157,13 +166,15 @@ void tAgent::ampUpStartCodons(void)
 #endif
 }
 
-void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, int theTime)
+void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, double addStateMutationRate, double removeStateMutationRate, int theTime)
 {
 	int nucleotides = (int)from->genome.size();
+    int lastHMGStartCodonIndex = 0;
 	double mutationRate = mutationsPerInherit / from->genome.size();
 	vector<unsigned char> buffer;
 	born = theTime;
     numHMGs = from->numHMGs;
+    numStates = from->numStates;
 	//ancestor=from;
 	//from->nrPointingAtMe++;
 	from->nrOfOffspring++;
@@ -179,6 +190,11 @@ void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicatio
         bool isHMGStartCodon = (from->genome[i] == 42 && from->genome[i + 1] == (255 - 42)) ||
                                 (i > 1 && genome[i - 1] == 42 && from->genome[i] == (255 - 42));
         
+        if (isHMGStartCodon)
+        {
+            lastHMGStartCodonIndex = i;
+        }
+        
 		if(!isHMGStartCodon && randDouble < mutationRate)
         {
             bool createdHMGStartCodon = false;
@@ -186,10 +202,17 @@ void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicatio
             // disallow point mutations from creating new HMGs
             do
             {
-                genome[i] = rand() & 255;
+                if ( (i - lastHMGStartCodonIndex) <= 11 && (i - lastHMGStartCodonIndex) >= 4 )
+                {
+                    genome[i] = rand() % numStates;
+                }
+                else
+                {
+                    genome[i] = rand() & 255;
+                }
                 
                 createdHMGStartCodon = (genome[i] == 42 && from->genome[i + 1] == (255 - 42)) ||
-                (i > 1 && genome[i - 1] == 42 && genome[i] == (255 - 42));
+                                        (i > 1 && genome[i - 1] == 42 && genome[i] == (255 - 42));
 
             } while (createdHMGStartCodon);
         }
@@ -253,14 +276,21 @@ void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicatio
             
             for (int i = 2; i < buffer.size(); ++i)
             {
-                buffer[i] = rand() % 255;
+                if (i >=5 && i <= 12)
+                {
+                    buffer[i] = rand() % numStates;
+                }
+                else
+                {
+                    buffer[i] = rand() & 255;
+                }
             }
         }
         
         genome.insert(genome.end(), buffer.begin(), buffer.end());
     }
     
-    // gate deletion
+    // delete gate
     if(numHMGs > 1 && randDouble < deletionRate)
     {
         --numHMGs;
@@ -297,9 +327,16 @@ void tAgent::inherit(tAgent *from, double mutationsPerInherit, double duplicatio
         genome.erase(genome.begin() + deleteStartIndex, genome.begin() + deleteEndIndex);
     }
     
-    if (genome.size() == 0)
+    // add state
+    if (randDouble < addStateMutationRate)
     {
-        cout << "empty gate " << numHMGs << endl; exit(0);
+        ++numStates;
+    }
+    
+    // remove state
+    if (numStates > (numInputs + numOutputs) && randDouble < removeStateMutationRate)
+    {
+        --numStates;
     }
     
 #else
@@ -363,24 +400,26 @@ void tAgent::setupPhenotype(void)
     
 	for(int i = 0; i < genome.size() - 1; ++i)
     {
-        // deterministic gate
 		if((genome[i] == 42) && (genome[i + 1] == (255 - 42)))
         {
 			hmmu=new tHMMU;
-			hmmu->setupQuick(genome,i);
-			//hmmu->setup(genome,i);
+            
+            // deterministic gate
+            if (genome[i + 2] % 2 == 0)
+            {
+                hmmu->setupQuick(genome, i, numStates);
+            }
+			
+            // probabilistic gate
+			else
+            {
+                hmmu->setup(genome, i, numStates);
+            }
+            
 			hmmus.push_back(hmmu);
             
             ++numHMGs;
 		}
-        
-        // probablistic gate
-		/*if((genome[i]==43)&&(genome[(i+1)%genome.size()]==(255-43))){
-			hmmu=new tHMMU;
-			//hmmu->setup(genome,i);
-			hmmu->setupQuick(genome,i);
-			hmmus.push_back(hmmu);
-		}*/
 	}
 }
 

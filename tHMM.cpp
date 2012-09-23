@@ -31,11 +31,12 @@ tHMMU::~tHMMU(){
 	ins.clear();
 	outs.clear();
 }
-void tHMMU::setup(vector<unsigned char> &genome, int start){
+void tHMMU::setup(vector<unsigned char> &genome, int start, int numStates)
+{
 	int i,j,k;
 	ins.clear();
 	outs.clear();
-	k=(start+2)%(int)genome.size();
+	k=(start+3)%(int)genome.size();
 
 	_xDim=1+(genome[(k++)%genome.size()]&3);
 	_yDim=1+(genome[(k++)%genome.size()]&3);
@@ -45,12 +46,12 @@ void tHMMU::setup(vector<unsigned char> &genome, int start){
 
 	for(i=0;i<_yDim;++i)
     {
-		ins[i]=genome[(k+i)%genome.size()]&(maxNodes-1);
+		ins[i]=genome[(k+i)%genome.size()] % numStates;
     }
     
 	for(i=0;i<_xDim;++i)
     {
-		outs[i]=genome[(k+4+i)%genome.size()]&(maxNodes-1);
+		outs[i]=genome[(k+4+i)%genome.size()] % numStates;
     }
 	
 	k += 8;
@@ -76,12 +77,12 @@ void tHMMU::setup(vector<unsigned char> &genome, int start){
 	}
 }
 
-void tHMMU::setupQuick(vector<unsigned char> &genome, int start)
+void tHMMU::setupQuick(vector<unsigned char> &genome, int start, int numStates)
 {
 	int i,j,k;
 	ins.clear();
 	outs.clear();
-	k=(start+2)%(int)genome.size();
+	k=(start+3) % (int)genome.size();
 	
 	_xDim=1+(genome[(k++)%genome.size()]&3);
 	_yDim=1+(genome[(k++)%genome.size()]&3);
@@ -92,12 +93,12 @@ void tHMMU::setupQuick(vector<unsigned char> &genome, int start)
     
 	for(i=0;i<_yDim;++i)
     {
-		ins[i]=genome[(k+i)%genome.size()]&(maxNodes-1);
+		ins[i]=genome[(k+i)%genome.size()] % numStates;
     }
-    
+
 	for(i=0;i<_xDim;++i)
     {
-		outs[i]=genome[(k+4+i)%genome.size()]&(maxNodes-1);
+		outs[i]=genome[(k+4+i)%genome.size()] % numStates;
     }
 	
 	k += 8;

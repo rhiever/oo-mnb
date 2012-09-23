@@ -23,7 +23,7 @@
 #define _globalConst_h_included_
 
 #define     randDouble      ((double)rand() / (double)RAND_MAX)
-#define     maxNodes        40
+#define     maxNodes        256
 
 #define     strLength       6
 #define     numInputs       (int)(2 * strLength)

@@ -42,6 +42,7 @@ public:
 	vector<unsigned char> genome;
 	vector<tDot> dots;
     int numHMGs;
+    int numStates;
 #ifdef useANN
 	tANN *ANN;
 #endif
@@ -69,7 +70,7 @@ public:
 	void loadAgent(char* filename);
 	void loadAgentWithTrailer(char* filename);
 	void setupPhenotype(void);
-	void inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, int theTime);
+	void inherit(tAgent *from, double mutationsPerInherit, double duplicationRate, double deletionRate, double addStateMutationRate, double removeStateMutationRate, int theTime);
 	unsigned char * getStatesPointer(void);
 	void updateStates(void);
 	void resetBrain(void);

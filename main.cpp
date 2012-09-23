@@ -64,12 +64,14 @@ using namespace std;
 
 //double  replacementRate             = 0.1;
 
+double  mutationsPerInherit         = 4.0;
+double  addStateMutationRate        = (1.0 / (15.0 * 100.0));
+double  removeStateMutationRate     = 0.0008;
+
 #ifdef directedMutations
-double  mutationsPerInherit         = 4.0;
-double  duplicationMutationRate     = 0.001;
-double  deletionMutationRate        = 0.0008;
+double  duplicationMutationRate     = (1.0 / (15.0 * 100.0));
+double  deletionMutationRate        = 0.0001;
 #else
-double  mutationsPerInherit         = 4.0;
 double  duplicationMutationRate     = 0.05;
 double  deletionMutationRate        = 0.02;
 #endif
@@ -257,7 +259,7 @@ int main(int argc, char *argv[])
 	for(int i = 0; i < populationSize; ++i)
     {
 		gameAgents[i] = new tAgent;
-		gameAgents[i]->inherit(gameAgent, mutationsPerInherit, duplicationMutationRate, deletionMutationRate, 0);
+		gameAgents[i]->inherit(gameAgent, mutationsPerInherit, duplicationMutationRate, deletionMutationRate, addStateMutationRate, removeStateMutationRate, 0);
     }
     
 	GANextGen.resize(populationSize);
@@ -304,7 +306,7 @@ int main(int argc, char *argv[])
         
         if (update % 1000 == 0)
         {
-            cout << "generation " << update << ": game agent [" << gameAgentAvgFitness << " : " << gameAgentMaxFitness << "] " << (bestGameAgent->genome.size() / 270) << endl;
+            cout << "generation " << update << ": game agent [" << gameAgentAvgFitness << " : " << gameAgentMaxFitness << "] " << (bestGameAgent->genome.size() / 270) << " " << bestGameAgent->numStates << endl;
         }
         
 		for(int i = 0; i < populationSize; ++i)
@@ -318,7 +320,7 @@ int main(int argc, char *argv[])
                 j = rand() % populationSize;
             } while((j == i) || (randDouble > (gameAgents[j]->fitness / gameAgentMaxFitness)));
             
-			offspring->inherit(gameAgents[j], mutationsPerInherit, duplicationMutationRate, deletionMutationRate, update);
+			offspring->inherit(gameAgents[j], mutationsPerInherit, duplicationMutationRate, deletionMutationRate, addStateMutationRate, removeStateMutationRate, update);
 			GANextGen[i] = offspring;
 		}
         
